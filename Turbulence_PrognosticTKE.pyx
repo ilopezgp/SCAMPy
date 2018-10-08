@@ -633,11 +633,10 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             for k in xrange(gw, self.Gr.nzg-gw):
                 z_ = self.Gr.z_half[k]
                 shear2 = pow((GMV.U.values[k+1] - GMV.U.values[k-1]) * 0.5 * self.Gr.dzi, 2) + \
-                    pow((GMV.V.values[k+1] - GMV.V.values[k-1]) * 0.5 * self.Gr.dzi, 2)
+                    pow((GMV.V.values[k+1] - GMV.V.values[k-1]) * 0.5 * self.Gr.dzi, 2) + \
+                    pow((self.EnvVar.W.values[k+1] - self.EnvVar.W.values[k-1]) * 0.5 * self.Gr.dzi, 2)
                 ri_bulk = g * (GMV.THL.values[k] - GMV.THL.values[gw]) * self.Gr.z_half[k]/ \
                 GMV.THL.values[gw] / (GMV.U.values[k] * GMV.U.values[k] + GMV.V.values[k] * GMV.V.values[k])
-                THL_lapse_rate = fmax(fabs((self.EnvVar.THL.values[k+1]-self.EnvVar.THL.values[k-1])*0.5*self.Gr.dzi),1e-10)
-                QT_lapse_rate = fmax(fabs((self.EnvVar.QT.values[k+1]-self.EnvVar.QT.values[k-1])*0.5*self.Gr.dzi),1e-10)
                 
                 # kz scale (surface layer terms)
                 if obukhov_length < 0.0: #unstable
@@ -815,13 +814,14 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
                 # For Dycoms and Gabls
                 # self.mixing_length[k] = smooth_minimum(l, 1.0/(0.7*self.Gr.dz))
-                # Fixed for Gabls mesh convergence study
-                # self.mixing_length[k] = smooth_minimum(l, 1.0/(0.7*3.125))
-                # Fixed for Gabls mesh convergence study
-                # self.mixing_length[k] = smooth_minimum(l, 1.0/(0.7*5.0))
                 # For Bomex
                 # self.mixing_length[k] = smooth_minimum(l, 1.0/(0.1*self.Gr.dz))
-                # For mesh convergence study Bomex
+
+                # Fixed for Gabls mesh convergence study
+                # self.mixing_length[k] = smooth_minimum(l, 1.0/(0.7*3.125))
+                # Fixed for DYCOMS mesh convergence study
+                # self.mixing_length[k] = smooth_minimum(l, 1.0/(0.7*5.0))
+                # Fixed for Bomex mesh convergence study
                 self.mixing_length[k] = smooth_minimum(l, 1.0/(0.1*40.0))
                 self.ml_ratio[k] = self.mixing_length[k]/l[int(self.mls[k])]
 

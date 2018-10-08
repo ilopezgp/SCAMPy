@@ -48,6 +48,42 @@ cdef double smooth_minimum(double [:] x, double a) nogil:
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+cdef double auto_smooth_minimum(double [:] x, double f):    
+    cdef:
+      unsigned int i = 0
+      double num, den
+      double leng, lmin, lmin2
+      double scale
+      double a = 1.0
+
+    lmin = 1.0e5; lmin2 = 1.0e5
+    leng = len(x)
+
+    # Get min and second min values
+    lmin = min(x)
+    with nogil:
+      while(i<leng):
+        if (x[i]<lmin2 and x[i]>lmin+1.0e-5):
+          lmin2 = x[i]
+        x[i] -= lmin
+        i += 1
+
+      # Set relative maximum importance of second min term
+      scale = (lmin2-lmin)/lmin*(1.0/(1.0+exp(lmin2-lmin)))
+      if (scale>f):
+        a = log((lmin2-lmin)/lmin/f-1.0)/(lmin2-lmin)
+
+      i = 0
+      num = 0.0; den = 0.0; 
+      while(i<leng):
+        num += x[i]*exp(-a*(x[i]))
+        den += exp(-a*(x[i]))
+        i += 1
+      smin = lmin + num/den
+    return smin
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cdef double smooth_minimum2(double [:] x, double l0) nogil:
     cdef:
       unsigned int i = 0, numLengths = 0
@@ -82,59 +118,6 @@ cdef double softmin(double [:] x, double k):
         lam /= ((x[j]-lmin)/lmin)
         break;
       j += 1
-    while(i<leng):
-      x[i] /= lmin
-      num += x[i]*exp(-lam*(x[i]-1.0))
-      den += exp(-lam*(x[i]-1.0))
-      i += 1
-    smin = lmin*num/den
-    return smin
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cdef double softmin2(double [:] x, double k):
-    cdef:
-      unsigned int i = 1, j = 1
-      double smin = 0.0, lmin, num, den, eps = 1.0, lam = 1.0
-      double leng
-
-    leng = len(x)
-    lmin = min(x)
-    num = 1.0
-    den = 1.0
-    while(j<leng):
-      if (x[j]-lmin>eps*lmin):
-        lam = log(k*x[j]/lmin)
-        lam /= ((x[j]-lmin)/lmin)
-        break;
-      j += 1
-    print(lam)
-    if lam < 1.0:
-      lam = 1.0
-    elif lam > 5.0:
-      lam = 5.0
-    while(i<leng):
-      x[i] /= lmin
-      num += x[i]*exp(-lam*(x[i]-1.0))
-      den += exp(-lam*(x[i]-1.0))
-      i += 1
-    smin = lmin*num/den
-    return smin
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cdef double softmin3(double [:] x):
-    cdef:
-      unsigned int i = 1, j = 1
-      double smin = 0.0, lmin, num, den, eps = 1.0, lam = 1.0
-      double leng
-
-    leng = len(x)
-    lmin = min(x)
-    lam = 100.0
-    num = 1.0
-    den = 1.0
-    lam = 2.0
     while(i<leng):
       x[i] /= lmin
       num += x[i]*exp(-lam*(x[i]-1.0))
