@@ -570,7 +570,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             double lh, cpm, prefactor, d_alpha_thetal_dry, d_alpha_qt_dry
             double d_alpha_thetal_cloudy, d_alpha_qt_cloudy, d_alpha_thetal_total, d_alpha_qt_total
             double grad_thl_minus=0.0, grad_qt_minus=0.0, grad_thl_plus=0, grad_qt_plus=0
-            double thv_, thv_e, thv_u, prandtl
+            double thv_, thv_e, thv_u, prandtl, q_sat, theta_cloudy, grad_th_cloudy_plus, grad_q_sat_plus, N_unsat
 
         # Grisogono, B. (2010), Generalizing ‘z‐less’ mixing length for stable boundary 
         # layers. Q.J.R. Meteorol. Soc., 136: 213-221. doi:10.1002/qj.529
@@ -692,8 +692,23 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     l3 = 1.0e6
                 l3 = fmin(l3, 1.0e7)
 
+
                 # Limiting stratification scale
-                N = fmax( 1e-8, sqrt(fmax(g/GMV.THL.values[k]*grad_thl_plus, 0.0)))
+                q_sat = qv_star_t(self.Ref.p0[k], t_cloudy)
+                grad_q_sat_plus = (qv_star_t(self.Ref.p0[k+1], self.EnvThermo.t_cloudy[k+1]) - q_sat) * self.Gr.dzi
+                theta_cloudy = theta_c(self.Ref.p0[k], t_cloudy)
+                grad_th_cloudy_plus = ( theta_c(self.Ref.p0[k+1], self.EnvThermo.t_cloudy[k+1]) - 
+                                theta_c(self.Ref.p0[k], t_cloudy) ) * self.Gr.dzi
+                N_unsat = fmax( 1e-8, sqrt(fmax(g/GMV.THL.values[k]*grad_thl_plus, 0.0)))
+                if self.EnvVar.CF.values[k] > 0.0:
+                    # Saturated Brunt-Vaisala freq from eqn. 36 in Durran and Klemp, 1982
+                    N = self.EnvVar.CF.values[k]*(g*( (1.0+lh*q_sat/Rd/t_cloudy) /
+                          (1.0+eps_v*lh*lh*q_sat/cpd/Rd/t_cloudy/t_cloudy)*
+                          (grad_th_cloudy_plus/theta_cloudy + lh/cpd/t_cloudy*grad_q_sat_plus) - 
+                          grad_qt_plus) ) + \
+                          (1.0-self.EnvVar.CF.values[k])*N_unsat
+                else:
+                    N = fmax( 1e-8, sqrt(fmax(g/GMV.THL.values[k]*grad_thl_plus, 0.0)))
                 l1 = fmin(sqrt(fmax(0.35*self.EnvVar.TKE.values[k],0.0))/N, 1000.0)
                 if (N<1e-7):
                     l1 = 1.0e5

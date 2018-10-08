@@ -30,7 +30,7 @@ cdef double rain_source_to_thetal(double qr, double p0, double T) nogil :
     return qr / exner_c(p0) * latent_heat(T) / cpd
 
 # instantly convert all cloud water exceeding a threshold to rain water 
-# the threshold is specified as axcess saturation
+# the threshold is specified as excess saturation
 # rain water is immediately removed from the domain
 # Tiedke:   TODO - add reference
 cdef double acnv_instant(double ql, double qt, double sat_treshold, double T, double p0) nogil :
