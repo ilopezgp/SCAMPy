@@ -55,6 +55,7 @@ cdef class EnvironmentThermodynamics:
 
         double [:] qt_dry
         double [:] th_dry
+        double [:] t_dry
         double [:] t_cloudy
         double [:] qv_cloudy
         double [:] qt_cloudy

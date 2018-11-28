@@ -161,6 +161,7 @@ cdef class EnvironmentThermodynamics:
         
         self.qt_dry = np.zeros(self.Gr.nzg, dtype=np.double, order='c')
         self.th_dry = np.zeros(self.Gr.nzg, dtype=np.double, order='c')
+        self.t_dry = np.zeros(self.Gr.nzg, dtype=np.double, order='c')
         self.t_cloudy = np.zeros(self.Gr.nzg, dtype=np.double, order ='c')
         self.qv_cloudy = np.zeros(self.Gr.nzg, dtype=np.double, order ='c')
         self.qt_cloudy = np.zeros(self.Gr.nzg, dtype=np.double, order='c')
@@ -211,11 +212,19 @@ cdef class EnvironmentThermodynamics:
                     self.qv_cloudy[k] = EnvVar.QT.values[k] - EnvVar.QL.values[k] #- EnvVar.QR.values[k]
                     self.qt_cloudy[k] = EnvVar.QT.values[k] #- EnvVar.QR.values[k]
                     self.th_cloudy[k] = EnvVar.T.values[k]/exner_c(self.Ref.p0_half[k])
+                    self.qt_dry[k] = 0.0
+                    self.th_dry[k] = 0.0
+                    self.t_dry[k] = 0.0
                 else:
                     EnvVar.CF.values[k] = 0.0
                     #EnvVar.QR.values[k] = 0.0
                     self.qt_dry[k] = EnvVar.QT.values[k]
                     self.th_dry[k] = EnvVar.T.values[k]/exner_c(self.Ref.p0_half[k])
+                    self.t_dry[k] = EnvVar.T.values[k]
+                    self.t_cloudy[k] = 0.0
+                    self.qv_cloudy[k] = 0.0
+                    self.qt_cloudy[k] = 0.0
+                    self.th_cloudy[k] = 0.0
 
                 #TODO - add rain in the environment
                 #TODO - add tendencies from Env to GMV
@@ -398,6 +407,7 @@ cdef class EnvironmentThermodynamics:
 
                 self.qt_dry[k]      = outer_int_qt_dry
                 self.th_dry[k]      = outer_int_T_dry / exner_c(self.Ref.p0_half[k])
+                self.t_dry[k]       = outer_int_T_dry
                 self.t_cloudy[k]    = outer_int_T_cloudy
                 self.qv_cloudy[k]   = outer_int_qt_cloudy - outer_int_ql
                 self.qt_cloudy[k]   = outer_int_qt_cloudy
@@ -456,6 +466,7 @@ cdef class EnvironmentThermodynamics:
 
                     self.qt_dry[k] = EnvVar.QT.values[k]
                     self.th_dry[k] = EnvVar.T.values[k]/exner_c(self.Ref.p0_half[k])
+                    self.t_dry[k] = EnvVar.T.values[k]
                     self.t_cloudy[k] = EnvVar.T.values[k]
                     self.qv_cloudy[k] = EnvVar.QT.values[k] - EnvVar.QL.values[k]
                     self.qt_cloudy[k] = EnvVar.QT.values[k]
