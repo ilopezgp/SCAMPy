@@ -569,7 +569,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             Py_ssize_t gw = self.Gr.gw
             double tau =  get_mixing_tau(self.zi, self.wstar)
             double l1, l2, l3, z_, N
-            double l[5]
+            double l[3]
             double ri_grad, shear2
             double qt_dry, th_dry, t_dry, t_cloudy, qv_cloudy, qt_cloudy, th_cloudy
             double lh, cpm, prefactor, d_alpha_thetal_dry, d_alpha_qt_dry
@@ -665,7 +665,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 l1 = fmin(sqrt(fmax(0.8*self.EnvVar.TKE.values[k],0.0))/N, 1.0e6)
 
 
-                l[0]=l2; l[1]=l1; l[2]=l3; l[3]=1.0e6; l[4]=1.0e6
+                l[0]=l2; l[1]=l1; l[2]=l3;
 
                 j = 0
                 while(j<len(l)):
@@ -774,7 +774,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 N = fmax( m_eps, sqrt(fmax(g/thv*grad_thv, 0.0)))
                 l1 = fmin(sqrt(0.4*fmax(self.EnvVar.TKE.values[k],0.0))/N, 1.0e6)
 
-                l[0]=l2; l[1]=l1; l[2]=l3; l[3]=1.0e6; l[4]=1.0e6
+                l[0]=l2; l[1]=l1; l[2]=l3;
 
                 j = 0
                 while(j<len(l)):
