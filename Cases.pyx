@@ -1335,6 +1335,11 @@ cdef class GABLS(CasesBase):
             else:
                 thetal[k] = 265.0 + (Gr.z_half[k] - 100.0) * 0.01
 
+            # By Ignacio: Random shear at initialization
+            # if Gr.z_half[k] <= 250.0:
+            #     GMV.U.values[k] += sqrt(0.2*(1.0-Gr.z_half[k]/250.0))*theta_pert[k]
+            #     GMV.V.values[k] += sqrt(0.2*(1.0-Gr.z_half[k]/250.0))*theta_pert[k]
+
             #Set qt profile
             GMV.QT.values[k] = 0.0
 
