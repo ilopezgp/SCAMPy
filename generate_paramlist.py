@@ -120,8 +120,8 @@ def Bomex():
 
     paramlist['turbulence']['EDMF_PrognosticTKE'] = {}
     paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.1
-    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_ed_coeff'] = 0.1
-    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_diss_coeff'] = 2.0
+    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_ed_coeff'] = 0.16
+    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_diss_coeff'] = 0.35
     paramlist['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 9.9
     paramlist['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 1.0
     paramlist['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 1.0
@@ -274,8 +274,8 @@ def DYCOMS_RF01():
 
     paramlist['turbulence']['EDMF_PrognosticTKE'] = {}
     paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.1
-    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_ed_coeff'] = 0.5
-    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_diss_coeff'] = 0.01
+    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_ed_coeff'] = 0.16
+    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_diss_coeff'] = 0.35
     paramlist['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 1.0
     paramlist['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 1.0
     paramlist['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 1.0
@@ -306,8 +306,8 @@ def GABLS():
 
     paramlist['turbulence']['EDMF_PrognosticTKE'] = {}
     paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.1
-    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_ed_coeff'] = 0.17
-    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_diss_coeff'] = 0.22
+    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_ed_coeff'] = 0.16
+    paramlist['turbulence']['EDMF_PrognosticTKE']['tke_diss_coeff'] = 0.35
     paramlist['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 9.9
     paramlist['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 1.0
     paramlist['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 1.0
