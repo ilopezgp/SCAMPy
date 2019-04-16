@@ -84,7 +84,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:] ml_ratio
         double [:] l_entdet
         double [:] b
-
+        double [:] prandtl_nvec
         str mixing_scheme
         str thermal_variable
         

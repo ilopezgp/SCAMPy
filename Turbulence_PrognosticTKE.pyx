@@ -178,6 +178,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.diffusive_flux_qt = np.zeros((Gr.nzg,),dtype=np.double,order='c')
 
         # Added by Ignacio : Length scheme in use (mls), and smooth min effect (ml_ratio)
+        self.prandtl_nvec = np.zeros((Gr.nzg,),dtype=np.double, order='c')
         self.mls = np.zeros((Gr.nzg,),dtype=np.double, order='c')
         self.ml_ratio = np.zeros((Gr.nzg,),dtype=np.double, order='c')
         self.l_entdet = np.zeros((Gr.nzg,),dtype=np.double, order='c')
@@ -638,17 +639,17 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
                 # Turbulent Prandtl number: 
                 if obukhov_length < 0.0: # globally convective
-                    self.prandtl_number = 0.74
+                    self.prandtl_nvec[k] = 0.74
                 elif obukhov_length > 0.0: #stable
                     # CSB (Dan Li, 2019)
-                    self.prandtl_number = 0.74*( 2.0*ri_grad/
+                    self.prandtl_nvec[k] = 0.74*( 2.0*ri_grad/
                         (1.0+(53.0/13.0)*ri_grad -sqrt( (1.0+(53.0/13.0)*ri_grad)**2.0 - 4.0*ri_grad ) ) )
                 else:
-                    self.prandtl_number = 0.74
+                    self.prandtl_nvec[k] = 0.74
 
                 l3 = sqrt(self.tke_diss_coeff/fmax(self.tke_ed_coeff, m_eps)) * sqrt(fmax(self.EnvVar.TKE.values[k],0.0))/fmax(sqrt(shear2), m_eps)
-                l3 /= sqrt(fmax(1.0 - ri_thl/fmax(self.prandtl_number, m_eps) - ri_qt/fmax(self.prandtl_number, m_eps), m_eps))
-                if (sqrt(shear2)< m_eps or 1.0 - ri_thl/fmax(self.prandtl_number, m_eps) - ri_qt/fmax(self.prandtl_number, m_eps) < m_eps):
+                l3 /= sqrt(fmax(1.0 - ri_thl/fmax(self.prandtl_nvec[k], m_eps) - ri_qt/fmax(self.prandtl_nvec[k], m_eps), m_eps))
+                if (sqrt(shear2)< m_eps or 1.0 - ri_thl/fmax(self.prandtl_nvec[k], m_eps) - ri_qt/fmax(self.prandtl_nvec[k], m_eps) < m_eps):
                     l3 = 1.0e6
 
                 # Limiting stratification scale (Deardorff, 1976)
@@ -737,17 +738,17 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
                 # Turbulent Prandtl number: 
                 if obukhov_length < 0.0: # globally convective
-                    self.prandtl_number = 0.74
+                    self.prandtl_nvec[k] = 0.74
                 elif obukhov_length > 0.0: #stable
                     # CSB (Dan Li, 2019), with Pr_neutral=0.74 and w1=40.0/13.0
-                    self.prandtl_number = 0.74*( 2.0*ri_grad/
+                    self.prandtl_nvec[k] = 0.74*( 2.0*ri_grad/
                         (1.0+(53.0/13.0)*ri_grad -sqrt( (1.0+(53.0/13.0)*ri_grad)**2.0 - 4.0*ri_grad ) ) )
                 else:
-                    self.prandtl_number = 0.74
+                    self.prandtl_nvec[k] = 0.74
 
                 # Ent-det mixing length
                 # Production/destruction terms
-                a = self.tke_ed_coeff*(shear2 - grad_b_thl/fmax(self.prandtl_number, m_eps) - grad_b_qt/fmax(self.prandtl_number, m_eps))* sqrt(fmax(self.EnvVar.TKE.values[k],0.0))
+                a = self.tke_ed_coeff*(shear2 - grad_b_thl/fmax(self.prandtl_nvec[k], m_eps) - grad_b_qt/fmax(self.prandtl_nvec[k], m_eps))* sqrt(fmax(self.EnvVar.TKE.values[k],0.0))
                 # Dissipation term
                 c_neg = self.tke_diss_coeff*self.EnvVar.TKE.values[k]*sqrt(fmax(self.EnvVar.TKE.values[k],0.0))
                 self.b[k] = 0.0
@@ -808,7 +809,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             Py_ssize_t gw = self.Gr.gw
             double lm
             double we_half
-            double prandtl, ri_thl, shear2
+            double pr
+            double ri_thl, shear2
 
         if self.similarity_diffusivity:
             ParameterizationBase.compute_eddy_diffusivities_similarity(self,GMV, Case)
@@ -817,9 +819,10 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             with nogil:
                 for k in xrange(gw, self.Gr.nzg-gw):
                     lm = self.mixing_length[k]
+                    pr = self.prandtl_nvec[k]
                     self.KM.values[k] = self.tke_ed_coeff * lm * sqrt(fmax(self.EnvVar.TKE.values[k],0.0) )
                     # Prandtl number is fixed. It should be defined as a function of height - Ignacio
-                    self.KH.values[k] = self.KM.values[k] / self.prandtl_number
+                    self.KH.values[k] = self.KM.values[k] / pr
 
         return
 
