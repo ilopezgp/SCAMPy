@@ -780,7 +780,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 grad_thv = interp2pt(grad_thv_low, grad_thv_plus)
 
                 N = fmax( m_eps, sqrt(fmax(g/thv*grad_thv, 0.0)))
-                l1 = fmin(sqrt(fmax(0.8*self.EnvVar.TKE.values[k],0.0))/N, 1.0e6)
+                l1 = fmin(sqrt(fmax(0.4*self.EnvVar.TKE.values[k],0.0))/N, 1.0e6)
 
 
                 l[0]=l2; l[1]=l1; l[2]=l3; l[3]=1.0e6; l[4]=1.0e6
