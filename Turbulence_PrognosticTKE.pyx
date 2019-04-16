@@ -1086,8 +1086,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 self.ln[k] =   l1
 
                 l[0]=l2; l[1]=l1; l[2]=l3; l[3]=1.0e6; l[4]=1.0e6
-                if self.time_counter > 18000.0:
-                    l[0]=1.0e6;
+                # if self.time_counter > 18000.0:
+                #     l[0]=1.0e6;
                 j = 0
                 while(j<len(l)):
                     if l[j]<m_eps or l[j]>1.0e6:
