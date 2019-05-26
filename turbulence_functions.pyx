@@ -109,8 +109,73 @@ cdef entr_struct entr_detr_b_w2(entr_in_struct entr_in) nogil:
     else:
         _ret.detr_sc = 0.0
 
-    _ret.entr_sc = 0.12 * fmax(entr_in.b,0.0) / fmax(entr_in.w * entr_in.w, 1e-2)
+    # Original
+    # _ret.entr_sc= 0.12 * fmax(entr_in.b,0.0) / fmax(entr_in.w * entr_in.w, 1e-2)
+    # Modified
+    _ret.entr_sc = fmin( 0.12 * fmax(entr_in.b,0.0) / fmax(entr_in.w * entr_in.w, 1e-4), 4.0e-3)
+    # Flags to avoid clipping
+    # if _ret.entr_sc == 0.12 * entr_in.b / 1e-2:
+    #     _ret.entr_sc = 0.0
+    # if _ret.detr_sc == 4.0e-3 +  0.12* fabs(entr_in.b) /1e-2:
+    #     _ret.detr_sc = 0.0
+    return  _ret
 
+cdef entr_struct entr_detr_les_dycoms(entr_in_struct entr_in) nogil:
+    cdef:
+        entr_struct _ret
+        double det = entr_in.det_les
+        double ent = entr_in.ent_les
+    # Uses LES profiles det=det(z) from DYCOMS
+    
+    # if entr_in.z > 100.0:
+    #     _ret.detr_sc = det_les[-1]
+    #     _ret.entr_sc = ent_les[-1]
+    # elif entr_in.z < 800.0:
+    #     _ret.detr_sc = det_les[0]
+    #     _ret.entr_sc = ent_les[0]
+    # if ent > det:
+    #     _ret.detr_sc = ent
+    #     _ret.entr_sc = det
+    # elif det > 0.0015:
+    #     _ret.detr_sc = 0.0015
+    #     _ret.entr_sc = ent
+    # elif entr_in.tke == 0.0:
+    #     _ret.detr_sc = 0.0
+    #     _ret.entr_sc = 0.0
+    # else: 
+    #     _ret.detr_sc = det
+    #     _ret.entr_sc = ent
+    _ret.detr_sc = det
+    _ret.entr_sc = 0.6*det # ent 
+    return  _ret
+
+cdef entr_struct entr_detr_les_bomex(entr_in_struct entr_in) nogil:
+    cdef:
+        entr_struct _ret
+        double det = entr_in.det_les
+        double ent = entr_in.ent_les
+
+    if entr_in.z < entr_in.zi :
+        _ret.detr_sc = 1.2e-3
+        _ret.entr_sc = 0.6e-3
+    else:
+        _ret.detr_sc = 2.5e-3
+        _ret.entr_sc = 1.2e-3
+    
+    # if ent > det:
+    #     _ret.detr_sc = ent
+    #     _ret.entr_sc = det
+    # elif det > 0.0015:
+    #     _ret.detr_sc = 0.0015
+    #     _ret.entr_sc = ent
+    # elif entr_in.tke < 0.0:
+    #     _ret.detr_sc = 0.0
+    #     _ret.entr_sc = 0.0
+    # else: 
+    #     _ret.detr_sc = det
+    #     _ret.entr_sc = ent
+    # _ret.detr_sc = det
+    # _ret.entr_sc = 0.6*det
     return  _ret
 
 cdef entr_struct entr_detr_suselj(entr_in_struct entr_in) nogil:
@@ -122,7 +187,7 @@ cdef entr_struct entr_detr_suselj(entr_in_struct entr_in) nogil:
     l0 = (entr_in.zbl - entr_in.zi)/10.0
     if entr_in.z >= entr_in.zi :
         _ret.detr_sc=  4.0e-3 + 0.12* fabs(fmin(entr_in.b,0.0)) / fmax(entr_in.w * entr_in.w, 1e-2)
-        _ret.entr_sc = 0.1 / entr_in.dz * entr_in.poisson
+        _ret.entr_sc = 0.002 #0.1 / entr_in.dz * entr_in.poisson
 
     else:
         _ret.detr_sc = 0.0

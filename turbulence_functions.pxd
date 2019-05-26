@@ -34,6 +34,8 @@ cdef struct entr_in_struct:
     double zbl
     double poisson
     double n_up
+    double ent_les
+    double det_les
 
 cdef entr_struct entr_detr_dry(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_inverse_z(entr_in_struct entr_in) nogil
@@ -42,6 +44,8 @@ cdef entr_struct entr_detr_b_w2(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_buoyancy_sorting(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_suselj(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_none(entr_in_struct entr_in) nogil
+cdef entr_struct entr_detr_les_dycoms(entr_in_struct entr_in) nogil
+cdef entr_struct entr_detr_les_bomex(entr_in_struct entr_in) nogil
 cdef evap_struct evap_sat_adjust(double p0, double thetal_, double qt_mix, double T_1, double qs_1, double ql_mix) nogil
 
 
