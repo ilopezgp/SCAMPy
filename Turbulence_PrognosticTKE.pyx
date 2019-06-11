@@ -639,7 +639,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             double grad_b_thl, grad_b_qt
             double m_eps = 1.0e-9 # Epsilon to avoid zero
             double [:] smooth_tke
-            double tke_intmean, turb_BL_layers, a_e, a,c_neg
+            double tke_intmean, turb_BL_layers, a_e, a,c_neg, wc_upd_nn, wc_env
 
         # Grisogono, B. (2010), Generalizing ‘z‐less’ mixing length for stable boundary 
         # layers. Q.J.R. Meteorol. Soc., 136: 213-221. doi:10.1002/qj.529
@@ -652,16 +652,16 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     pow((self.EnvVar.W.values[k+1] - self.EnvVar.W.values[k-1]) * 0.5 * self.Gr.dzi, 2)
 
                 thv = theta_virt_c(self.Ref.p0_half[k], self.EnvVar.T.values[k], self.EnvVar.QT.values[k], 
-                    self.EnvVar.QL.values[k], GMV.QR.values[k])
+                    self.EnvVar.QL.values[k])
                 grad_thv_low = grad_thv_plus
                 grad_thv_plus = ( theta_virt_c(self.Ref.p0_half[k+1], self.EnvVar.T.values[k+1], self.EnvVar.QT.values[k+1], 
-                    self.EnvVar.QL.values[k+1], GMV.QR.values[k+1])
+                    self.EnvVar.QL.values[k+1])
                     -  theta_virt_c(self.Ref.p0_half[k], self.EnvVar.T.values[k], self.EnvVar.QT.values[k], 
-                    self.EnvVar.QL.values[k], GMV.QR.values[k])) * self.Gr.dzi
+                    self.EnvVar.QL.values[k])) * self.Gr.dzi
                 grad_thv = interp2pt(grad_thv_low, grad_thv_plus)
 
                 ri_bulk = (g / thv ) * (thv - theta_virt_c(self.Ref.p0_half[gw], self.EnvVar.T.values[gw], self.EnvVar.QT.values[gw], 
-                    self.EnvVar.QL.values[gw], GMV.QR.values[gw])) * z_/ \
+                    self.EnvVar.QL.values[gw])) * z_/ \
                     (GMV.U.values[k] * GMV.U.values[k] + GMV.V.values[k] * GMV.V.values[k])
 
                 if (shear2>m_eps) and ri_bulk>0.05:
@@ -697,11 +697,11 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 l[0] = fmax(vkb * z_, m_eps);
                 # tau = 400.0 # Value taken in the paper
                 l[1] = tau * sqrt(fmax(self.GMV.TKE.values[k], m_eps))
-                thv = theta_virt_c(self.Ref.p0_half[k], GMV.T.values[k], GMV.QT.values[k], GMV.QL.values[k], GMV.QR.values[k])
+                thv = theta_virt_c(self.Ref.p0_half[k], GMV.T.values[k], GMV.QT.values[k], GMV.QL.values[k])
                 grad_thv_low = grad_thv_plus
-                grad_thv_plus = (theta_virt_c(self.Ref.p0_half[k+1], GMV.T.values[k+1], GMV.QT.values[k+1], GMV.QL.values[k+1], GMV.QR.values[k+1])
+                grad_thv_plus = (theta_virt_c(self.Ref.p0_half[k+1], GMV.T.values[k+1], GMV.QT.values[k+1], GMV.QL.values[k+1])
                     -  theta_virt_c(self.Ref.p0_half[k], GMV.T.values[k], GMV.QT.values[k], 
-                    GMV.QL.values[k], GMV.QR.values[k])) * self.Gr.dzi
+                    GMV.QL.values[k])) * self.Gr.dzi
                 grad_thv = interp2pt(grad_thv_low, grad_thv_plus)
                 if (grad_thv>0.0):
                     N = fmax( m_eps, sqrt(fmax(g/thv*grad_thv, 0.0)))
@@ -783,12 +783,12 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
                 # Limiting stratification scale (Deardorff, 1976)
                 thv = theta_virt_c(self.Ref.p0_half[k], self.EnvVar.T.values[k], self.EnvVar.QT.values[k], 
-                    self.EnvVar.QL.values[k], GMV.QR.values[k])
+                    self.EnvVar.QL.values[k])
                 grad_thv_low = grad_thv_plus
                 grad_thv_plus = ( theta_virt_c(self.Ref.p0_half[k+1], self.EnvVar.T.values[k+1], self.EnvVar.QT.values[k+1], 
-                    self.EnvVar.QL.values[k+1], GMV.QR.values[k+1])
+                    self.EnvVar.QL.values[k+1])
                     -  theta_virt_c(self.Ref.p0_half[k], self.EnvVar.T.values[k], self.EnvVar.QT.values[k], 
-                    self.EnvVar.QL.values[k], GMV.QR.values[k])) * self.Gr.dzi
+                    self.EnvVar.QL.values[k])) * self.Gr.dzi
                 grad_thv = interp2pt(grad_thv_low, grad_thv_plus)
 
                 N = fmax( m_eps, sqrt(fmax(g/thv*grad_thv, 0.0)))
@@ -823,7 +823,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 z_ = self.Gr.z_half[k]
                 shear2 = pow((GMV.U.values[k+1] - GMV.U.values[k-1]) * 0.5 * self.Gr.dzi, 2) + \
                     pow((GMV.V.values[k+1] - GMV.V.values[k-1]) * 0.5 * self.Gr.dzi, 2) + \
-                    pow((self.EnvVar.W.values[k+1] - self.EnvVar.W.values[k-1]) * 0.5 * self.Gr.dzi, 2)
+                    pow((self.EnvVar.W.values[k] - self.EnvVar.W.values[k-1]) * self.Gr.dzi, 2)
                 
                 # kz scale (surface layer)
                 if obukhov_length < 0.0: #unstable
@@ -891,7 +891,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
                 # Ent-det mixing length
                 # Production/destruction terms
-                a = self.tke_ed_coeff*(shear2 - grad_b_thl/fmax(self.prandtl_nvec[k], m_eps) - grad_b_qt/fmax(self.prandtl_nvec[k], m_eps))* sqrt(fmax(self.EnvVar.TKE.values[k],0.0))
+                a = self.tke_ed_coeff*(shear2 - grad_b_thl/self.prandtl_nvec[k] - grad_b_qt/self.prandtl_nvec[k])* sqrt(fmax(self.EnvVar.TKE.values[k],0.0))
                 # Dissipation term
                 c_neg = self.tke_diss_coeff*self.EnvVar.TKE.values[k]*sqrt(fmax(self.EnvVar.TKE.values[k],0.0))
                 self.b[k] = 0.0
@@ -899,8 +899,10 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     # self.b[k] += self.UpdVar.Area.values[nn,k]*self.UpdVar.W.values[nn,k]*(
                     #     self.detr_sc[nn,k]*(self.UpdVar.W.values[nn,k]-self.EnvVar.W.values[k])*(self.UpdVar.W.values[nn,k]-self.EnvVar.W.values[k])/2.0 -
                     #     self.entr_sc[nn,k]*self.EnvVar.TKE.values[k])/(1.0-self.UpdVar.Area.bulkvalues[k])
-                    self.b[k] += self.UpdVar.Area.values[nn,k]*self.UpdVar.W.values[nn,k]*self.detr_sc[nn,k]/(1.0-self.UpdVar.Area.bulkvalues[k])*(
-                        (self.UpdVar.W.values[nn,k]-self.EnvVar.W.values[k])*(self.UpdVar.W.values[nn,k]-self.EnvVar.W.values[k])/2.0-self.EnvVar.TKE.values[k])
+                    wc_upd_nn = (self.UpdVar.W.values[nn,k]+self.UpdVar.W.values[nn,k-1])/2.0
+                    wc_env = (self.EnvVar.W.values[k] - self.EnvVar.W.values[k-1])/2.0
+                    self.b[k] += self.UpdVar.Area.values[nn,k]*wc_upd_nn*self.detr_sc[nn,k]/(1.0-self.UpdVar.Area.bulkvalues[k])*(
+                        (wc_upd_nn-wc_env)*(wc_upd_nn-wc_env)/2.0-self.EnvVar.TKE.values[k])
                         
 
                 # self.b[k] += self.tke_pressure[k]/(1.0-self.UpdVar.Area.bulkvalues[k])/self.Ref.rho0_half[k]
@@ -912,12 +914,12 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
                 # Limiting stratification scale (Deardorff, 1976)
                 thv = theta_virt_c(self.Ref.p0_half[k], self.EnvVar.T.values[k], self.EnvVar.QT.values[k], 
-                    self.EnvVar.QL.values[k], GMV.QR.values[k])
+                    self.EnvVar.QL.values[k])
                 grad_thv_low = grad_thv_plus
                 grad_thv_plus = ( theta_virt_c(self.Ref.p0_half[k+1], self.EnvVar.T.values[k+1], self.EnvVar.QT.values[k+1], 
-                    self.EnvVar.QL.values[k+1], GMV.QR.values[k+1])
+                    self.EnvVar.QL.values[k+1])
                     -  theta_virt_c(self.Ref.p0_half[k], self.EnvVar.T.values[k], self.EnvVar.QT.values[k], 
-                    self.EnvVar.QL.values[k], GMV.QR.values[k])) * self.Gr.dzi
+                    self.EnvVar.QL.values[k])) * self.Gr.dzi
                 grad_thv = interp2pt(grad_thv_low, grad_thv_plus)
 
                 N = fmax( m_eps, sqrt(fmax(g/thv*grad_thv, 0.0)))
@@ -1088,12 +1090,12 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
                 # Limiting stratification scale (Deardorff, 1976)
                 thv = theta_virt_c(self.Ref.p0_half[k], self.EnvVar.T.values[k], self.EnvVar.QT.values[k], 
-                    self.EnvVar.QL.values[k], GMV.QR.values[k])
+                    self.EnvVar.QL.values[k])
                 grad_thv_low = grad_thv_plus
                 grad_thv_plus = ( theta_virt_c(self.Ref.p0_half[k+1], self.EnvVar.T.values[k+1], self.EnvVar.QT.values[k+1], 
-                    self.EnvVar.QL.values[k+1], GMV.QR.values[k+1])
+                    self.EnvVar.QL.values[k+1])
                     -  theta_virt_c(self.Ref.p0_half[k], self.EnvVar.T.values[k], self.EnvVar.QT.values[k], 
-                    self.EnvVar.QL.values[k], GMV.QR.values[k])) * self.Gr.dzi
+                    self.EnvVar.QL.values[k])) * self.Gr.dzi
                 grad_thv = interp2pt(grad_thv_low, grad_thv_plus)
 
                 N = fmax( m_eps, sqrt(fmax(g/thv*grad_thv, 0.0)))
@@ -1412,7 +1414,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
                 input.b = self.UpdVar.B.values[i,k]
                 input.w = interp2pt(self.UpdVar.W.values[i,k],self.UpdVar.W.values[i,k-1])
-                input.w = self.UpdVar.W.values[i,k]   ### BY IGNACIO TO AVOID NUMERICAL ARTIFACT
                 input.z = self.Gr.z_half[k]
                 input.af = self.UpdVar.Area.values[i,k]
                 input.tke = self.EnvVar.TKE.values[k]
