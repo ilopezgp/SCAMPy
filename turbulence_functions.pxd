@@ -33,7 +33,6 @@ cdef struct entr_in_struct:
     double dz
     double zbl
     double poisson
-    double n_up
 
 cdef entr_struct entr_detr_dry(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_inverse_z(entr_in_struct entr_in) nogil
