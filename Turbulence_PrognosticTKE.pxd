@@ -57,6 +57,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:] tke_detr_loss
         double [:] tke_shear
         double [:] tke_pressure
+        double [:] tke_transport
+        double [:] tke_advection
         double max_area_factor
         double tke_ed_coeff
         double tke_diss_coeff
@@ -120,6 +122,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
     cpdef compute_tke_shear(self, GridMeanVariables GMV)
     cpdef compute_covariance_shear(self, GridMeanVariables GMV)
     cpdef compute_tke_pressure(self)
+    cpdef compute_tke_transport(self)
+    cpdef compute_tke_advection(self)
     cpdef update_tke_ED(self, GridMeanVariables GMV, CasesBase Case,TimeStepping TS)
     cpdef update_covariance_ED(self, GridMeanVariables GMV, CasesBase Case,TimeStepping TS)
     cpdef update_GMV_diagnostics(self, GridMeanVariables GMV)

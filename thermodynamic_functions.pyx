@@ -27,9 +27,12 @@ cdef  double thetali_c(double p0, double T, double qt, double ql, double qi, dou
     # Liquid ice potential temperature consistent with Triopoli and Cotton (1981)
     return theta_c(p0, T) * exp(-latent_heat(T)*(ql/(1.0 - qt) + qi/(1.0 -qt))/(T*cpd))
 
-cdef  double theta_virt_c( double p0, double T, double qt, double ql, double qr) nogil :
-    # Virtual potential temperature, mixing ratios are approximated by specific humidities.
-    return theta_c(p0, T) * (1.0 + 0.61 * (qr) - ql);
+cdef  double theta_virt_c( double p0, double T, double qt, double ql) nogil :
+    # qd = 1 - qt
+    # qt = qv + ql + qi
+    # qr = mr/md+mv+ml+mi
+    # Ignacio: This formulation holds when qt = qv + ql (negligible/no ice)
+    return theta_c(p0, T) * (1.0 + 0.61 * (qt - ql) - ql);
 
 cdef  double pd_c(double p0, double qt, double qv)  nogil :
     return p0*(1.0-qt)/(1.0 - qt + eps_vi * qv)

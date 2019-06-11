@@ -399,7 +399,7 @@ def GABLS():
     namelist['thermodynamics']['saturation'] = 'sa_mean'
 
     namelist['time_stepping'] = {}
-    namelist['time_stepping']['dt'] = 0.4
+    namelist['time_stepping']['dt'] = 1.0
     namelist['time_stepping']['t_max'] = 9 * 3600.0
 
     namelist['turbulence'] = {}
