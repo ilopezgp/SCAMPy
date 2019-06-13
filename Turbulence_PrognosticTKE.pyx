@@ -1772,19 +1772,21 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
         cdef:
             Py_ssize_t k
-
             double ws= self.wstar, us = Case.Sur.ustar, zs = self.zi, z
+
         self.reset_surface_covariance(GMV, Case)
 
-        with nogil:
-            for k in xrange(self.Gr.nzg):
-                z = self.Gr.z_half[k]
-                # need to rethink of how to initialize the covariance profiles - for now I took the TKE profile
-                if ws<1e-6:
-                    GMV.Hvar.values[k]   = 0.4*(1.0-z/250.0)*(1.0-z/250.0)*(1.0-z/250.0) # Taken from Beare et al 2006 for SBL
+        for k in xrange(self.Gr.nzg):
+            z = self.Gr.z_half[k]
+            # need to rethink of how to initialize the covariance profiles - for now I took the TKE profile
+            if Case.casename =='GABLS':
+                with nogil:
+                    if (z<=250.0):
+                        GMV.Hvar.values[k]   = 0.4*(1.0-z/250.0)*(1.0-z/250.0)*(1.0-z/250.0) # Taken from Beare et al 2006 for SBL
                     GMV.QTvar.values[k]  = 0.0
                     GMV.HQTcov.values[k] = 0.0
-                else:  # Only works in convective conditions - Ignacio
+            if ws > 1.0e-6:  # Only works in convective conditions - Ignacio
+                with nogil:
                     GMV.Hvar.values[k]   = GMV.Hvar.values[self.Gr.gw] * ws * 1.3 * cbrt((us*us*us)/(ws*ws*ws) + 0.6 * z/zs) * sqrt(fmax(1.0-z/zs,0.0))
                     GMV.QTvar.values[k]  = GMV.QTvar.values[self.Gr.gw] * ws * 1.3 * cbrt((us*us*us)/(ws*ws*ws) + 0.6 * z/zs) * sqrt(fmax(1.0-z/zs,0.0))
                     GMV.HQTcov.values[k] = GMV.HQTcov.values[self.Gr.gw] * ws * 1.3 * cbrt((us*us*us)/(ws*ws*ws) + 0.6 * z/zs) * sqrt(fmax(1.0-z/zs,0.0))
