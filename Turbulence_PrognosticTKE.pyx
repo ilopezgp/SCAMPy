@@ -1903,6 +1903,14 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         z = self.Gr.z_half[k]
                         if (z<=250.0):
                             GMV.TKE.values[k] = 0.4*(1.0-z/250.0)*(1.0-z/250.0)*(1.0-z/250.0)
+
+            if Case.casename =='Bomex':
+                with nogil:
+                    for k in xrange(self.Gr.nzg):
+                        z = self.Gr.z_half[k]
+                        if (z<=2500.0):
+                            GMV.TKE.values[k] = 1.0 - z/3000.0
+
         if self.calc_scalar_var:
             if ws > 0.0:
                 with nogil:

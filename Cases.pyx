@@ -177,6 +177,9 @@ cdef class Bomex(CasesBase):
             double ql=0.0, qi =0.0 # IC of Bomex is cloud-free
             Py_ssize_t k
 
+            theta_pert = 0.1
+            qt_pert = 0.025/1000.0
+
         for k in xrange(Gr.gw,Gr.nzg-Gr.gw):
             #Set Thetal profile
             if Gr.z_half[k] <= 520.:
@@ -204,6 +207,11 @@ cdef class Bomex(CasesBase):
                 GMV.U.values[k] = -8.75
             if Gr.z_half[k] > 700.0:
                 GMV.U.values[k] = -8.75 + (Gr.z_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
+
+            #Set perturbations on qt and theta_l
+            if Gr.z_half[k] <= 1600.0:
+                thetal[k] = thetal[k] + theta_pert*(np.random.random_sample()-0.5)
+                GMV.QT.values[k] = GMV.QT.values[k] + qt_pert*(np.random.random_sample()-0.5)
 
         if GMV.H.name == 'thetal':
             for k in xrange(Gr.gw,Gr.nzg-Gr.gw):
