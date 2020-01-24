@@ -70,6 +70,7 @@ cdef class CasesBase:
 
 
 cdef class Soares(CasesBase):
+# Case based on (Soares et al, 2004): An EDMF parameterization for dry and shallow cumulus convection
     def __init__(self, paramlist):
         self.casename = 'Soares2004'
         self.Sur = Surface.SurfaceFixedFlux(paramlist)
@@ -80,7 +81,7 @@ cdef class Soares(CasesBase):
         return
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats):
         Ref.Pg = 1000.0 * 100.0
-        Ref.qtg = 4.5e-3
+        Ref.qtg = 5.0e-3
         Ref.Tg = 300.0
         Ref.initialize(Gr, Stats)
         return
@@ -123,15 +124,19 @@ cdef class Soares(CasesBase):
         return
 
     cpdef initialize_surface(self, Grid Gr, ReferenceState Ref ):
-        self.Sur.zrough = 1.0e-4
+        self.Sur.zrough = 0.16 #1.0e-4 0.16 is the value specified in the Nieuwstadt paper.
         self.Sur.Tsurface = 300.0
-        self.Sur.qsurface = 5e-3
-        self.Sur.lhf = 0.0 #2.5e-5 * Ref.rho0[Gr.gw -1] * latent_heat(self.Sur.Tsurface)
-        self.Sur.shf = 6.0e-2 * cpm_c(self.Sur.qsurface) * Ref.rho0[Gr.gw-1]
+        self.Sur.qsurface = 5.0e-3
+        theta_flux = 6.0e-2
+        qt_flux = 2.5e-5
+        theta_surface = self.Sur.Tsurface
+        self.Sur.lhf = qt_flux * Ref.rho0[Gr.gw -1] * latent_heat(self.Sur.Tsurface) # It would be 0.0 if we follow Nieuwstadt.
+        self.Sur.shf = theta_flux * cpm_c(self.Sur.qsurface) * Ref.rho0[Gr.gw-1]
         self.Sur.ustar_fixed = False
         self.Sur.Gr = Gr
         self.Sur.Ref = Ref
-        self.Sur.bflux = g * ( 6.0e-2/self.Sur.Tsurface + (eps_vi -1.0)* 2.5e-5) # This will be overwritten
+        self.Sur.bflux   =  g * ((theta_flux + (eps_vi - 1.0) * (theta_surface * qt_flux + self.Sur.qsurface * theta_flux))
+                                 / (theta_surface * (1.0 + (eps_vi-1) * self.Sur.qsurface)))
         self.Sur.initialize()
 
         return
