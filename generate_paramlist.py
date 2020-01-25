@@ -64,6 +64,8 @@ def main():
 
     if case_name == 'Soares':
         paramlist = Soares(paramlist_defaults)
+    elif case_name == 'Nieuwstadt':
+        paramlist = Nieuwstadt(paramlist_defaults)
     elif case_name == 'Bomex':
         paramlist = Bomex(paramlist_defaults)
     elif case_name == 'life_cycle_Tan2018':
@@ -92,6 +94,13 @@ def Soares(paramlist_defaults):
 
     paramlist = copy.deepcopy(paramlist_defaults)
     paramlist['meta']['casename'] = 'Soares'
+
+    return paramlist
+
+def Nieuwstadt(paramlist_defaults):
+
+    paramlist = copy.deepcopy(paramlist_defaults)
+    paramlist['meta']['casename'] = 'Nieuwstadt'
 
     return paramlist
 

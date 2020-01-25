@@ -1911,12 +1911,12 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         if (z<=2500.0):
                             GMV.TKE.values[k] = 1.0 - z/3000.0
 
-            elif Case.casename =='Soares':
+            elif Case.casename =='Soares' or Case.casename =='Nieuwstadt':
                 with nogil:
                     for k in xrange(self.Gr.nzg):
                         z = self.Gr.z_half[k]
                         if (z<=1600.0):
-                            GMV.TKE.values[k] = 0.1*1.46*1.46*(1.0 - z/1600.0)
+                            GMV.TKE.values[k] = 0.1*1.46*1.46*(1.0 - z/3000.0)
 
         if self.calc_scalar_var:
             if ws > 0.0:
