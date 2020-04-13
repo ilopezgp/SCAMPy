@@ -24,6 +24,7 @@ cdef struct entr_in_struct:
     double sort_pow
     double c_det
     double chi_upd
+    double tke_coef
     double c_mu
     double c_ed_mf
     double c_mu0
@@ -101,6 +102,7 @@ cdef entr_struct entr_detr_inverse_z(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_inverse_w(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_b_w2(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_env_moisture_deficit(entr_in_struct entr_in) nogil
+cdef entr_struct entr_detr_env_moisture_deficit_b_ED_MF(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_buoyancy_sorting(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_tke(entr_in_struct entr_in) nogil
 cdef entr_struct entr_detr_suselj(entr_in_struct entr_in) nogil
