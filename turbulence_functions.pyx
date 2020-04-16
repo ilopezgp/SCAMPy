@@ -104,7 +104,7 @@ cdef entr_struct entr_detr_env_moisture_deficit(entr_in_struct entr_in) nogil:
     with gil:
         l[0] = entr_in.tke_coef*fabs(db/sqrt(entr_in.tke+1e-8))
         l[1] = fabs(db/dw)
-        inv_timescale = lamb_smooth_minimum(l, 0.0001, 1e-3)
+        inv_timescale = lamb_smooth_minimum(l, 0.1, 0.0005)
     _ret.entr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e)
     _ret.detr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d)
 

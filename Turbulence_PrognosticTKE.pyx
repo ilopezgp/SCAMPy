@@ -1026,13 +1026,23 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
     cpdef compute_horizontal_eddy_diffusivities(self, GridMeanVariables GMV):
         cdef:
             Py_ssize_t i, k
-            double l, R_up
+            double R_up,wu_half, we_half, a, velocity_scale
+            double [:] ae = np.subtract(np.ones((self.Gr.nzg,),dtype=np.double, order='c'),self.UpdVar.Area.bulkvalues)
+            double l[2]
 
         with nogil:
             for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
                 for i in xrange(self.n_updrafts):
                     if self.UpdVar.Area.values[i,k]>0.0:
-                        self.horizontal_KM[i,k] = self.UpdVar.Area.values[i,k]*self.turbulent_entrainment_factor*sqrt(fmax(GMV.TKE.values[k],0.0))*self.pressure_plume_spacing[i]
+                        wu_half = interp2pt(self.UpdVar.W.values[i,k], self.UpdVar.W.values[i,k-1])
+                        we_half = interp2pt(self.EnvVar.W.values[k], self.EnvVar.W.values[k-1])
+                        a = self.UpdVar.Area.values[i,k]
+                        with gil:
+                            l[0] = sqrt(fmax(ae[k]*self.EnvVar.TKE.values[k],0.0))
+                            l[1] = sqrt(fmax(a*ae[k]*(wu_half-we_half)**2.0,0.0))
+                            velocity_scale = lamb_smooth_minimum(l, 0.1, 0.05)
+                        self.horizontal_KM[i,k] = self.UpdVar.Area.values[i,k]*self.turbulent_entrainment_factor \
+                        *velocity_scale*self.pressure_plume_spacing[i]
                         self.horizontal_KH[i,k] = self.horizontal_KM[i,k] / self.prandtl_nvec[k]
                     else:
                         self.horizontal_KM[i,k] = 0.0
@@ -1268,17 +1278,11 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     wu_half = interp2pt(self.UpdVar.W.values[i,k], self.UpdVar.W.values[i,k-1])
                     we_half = interp2pt(self.EnvVar.W.values[k], self.EnvVar.W.values[k-1])
                     if a*wu_half  > 0.0:
-                        ed_mf_ratio = fabs(self.EnvVar.TKE.buoy[k])/(fabs(a*(1.0-a)*
-                            (wu_half-we_half)*(self.UpdVar.B.values[i,k] - self.EnvVar.B.values[k]))+1e-8)
-
                         self.turb_entr_H[i,k]  = (2.0/R_up**2.0)*self.Ref.rho0_half[k] * a * self.horizontal_KH[i,k]  * \
-                                                    (self.EnvVar.H.values[k] - self.UpdVar.H.values[i,k]) * \
-                                                    (1.0/(1.0+exp(self.entrainment_ed_mf_sigma*(ed_mf_ratio-1.0))))
+                                                    (self.EnvVar.H.values[k] - self.UpdVar.H.values[i,k])
                         self.turb_entr_QT[i,k] = (2.0/R_up**2.0)*self.Ref.rho0_half[k]* a * self.horizontal_KH[i,k]  * \
-                                                     (self.EnvVar.QT.values[k] - self.UpdVar.QT.values[i,k]) * \
-                                                     (1.0/(1.0+exp(self.entrainment_ed_mf_sigma*(ed_mf_ratio-1.0))))
-                        self.frac_turb_entr[i,k]    = (2.0/R_up**2.0) * self.horizontal_KH[i,k] * \
-                                                     (1.0/(1.0+exp(self.entrainment_ed_mf_sigma*(ed_mf_ratio-1.0))))/ wu_half/a
+                                                     (self.EnvVar.QT.values[k] - self.UpdVar.QT.values[i,k])
+                        self.frac_turb_entr[i,k]    = (2.0/R_up**2.0) * self.horizontal_KH[i,k] / wu_half/a
                     else:
                         self.turb_entr_H[i,k] = 0.0
                         self.turb_entr_QT[i,k] = 0.0
@@ -1289,14 +1293,9 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         b_env_full = interp2pt(self.EnvVar.B.values[k], self.EnvVar.B.values[k-1])
                         env_tke_full = interp2pt(self.EnvVar.TKE.buoy[k], self.EnvVar.TKE.buoy[k-1])
 
-                        ed_mf_ratio = fabs(env_tke_full)/(fabs(a_full*(1.0-a_full)*
-                            (self.UpdVar.W.values[i,k]-self.EnvVar.W.values[k])*(b_upd_full - b_env_full))+1e-8)
-
                         self.turb_entr_W[i,k]  = (2.0/R_up_full**2.0)*self.Ref.rho0[k] * a_full * K_full  * \
-                                                    (self.EnvVar.W.values[k]-self.UpdVar.W.values[i,k]) * \
-                                                    (1.0/(1.0+exp(self.entrainment_ed_mf_sigma*(ed_mf_ratio-1.0))))
-                        self.frac_turb_entr_full[i,k] = (2.0/R_up_full**2.0) * K_full / self.UpdVar.W.values[i,k] * \
-                                                    (1.0/(1.0+exp(self.entrainment_ed_mf_sigma*(ed_mf_ratio-1.0))))/a_full
+                                                    (self.EnvVar.W.values[k]-self.UpdVar.W.values[i,k])
+                        self.frac_turb_entr_full[i,k] = (2.0/R_up_full**2.0) * K_full / self.UpdVar.W.values[i,k] / a_full
                     else:
                         self.turb_entr_W[i,k] = 0.0
 
